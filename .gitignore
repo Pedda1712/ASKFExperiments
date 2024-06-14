@@ -1,0 +1,10 @@
+/**/*.cfg
+/**/*~
+lib/
+lib64/
+lib64
+lib
+bin/
+share/
+/**/__pycache__
+test_exp.json

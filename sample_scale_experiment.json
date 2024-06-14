@@ -1,0 +1,37 @@
+{
+    "outfile_prefix": "sampleScale",
+    "measurements": [
+	{
+	    "data": "data/sample_scale/data_10_2_100_0.2.json",
+	    "repeat": 10
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_200_0.2.json",
+	    "repeat": 10
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_400_0.2.json",
+	    "repeat": 10
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_600_0.2.json",
+	    "repeat": 10
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_800_0.2.json",
+	    "repeat": 10
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_1000_0.2.json",
+	    "repeat": 10
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_1500_0.2.json",
+	    "repeat": 10
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_2000_0.2.json",
+	    "repeat": 10
+	}
+    ]
+}
