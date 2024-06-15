@@ -3,6 +3,7 @@ import sys
 import json
 import numpy as np
 from voASKF import run_test_on_voASKF
+from ASKF import run_test_on_ASKF
 
 # This file runs ASKF experiments (ASKF-One-V-Rest CPU vs ASKF-One-V-Rest GPU vs voASKF GPU)
 # and outputs train/test accuracy, and mean execution time + std deviation
@@ -15,7 +16,7 @@ if len(args) != 2:
     exit(1)
 
 # if a dataset contains more samples than specified here, the CPU run is omitted (would take too long)
-max_cpu_sample_count = 800
+max_cpu_sample_count = 600
 
 with open(args[1]) as f:
     d = json.load(f)
@@ -59,10 +60,11 @@ with open(args[1]) as f:
         m_train_c = np.array(m_train_c).astype(int)
         m_test_X = np.array(m_test_X).astype(float).T
         m_test_c = np.array(m_test_c).astype(int)
-        
+
+        m_samples = m_train_X.shape[0] + m_test_X.shape[0]
         measurement_line = {
             "# classes": np.unique(m_train_c).shape[0],
-            "# samples": m_train_X.shape[0] + m_test_X.shape[0],
+            "# samples": m_samples,
             "# repetitions": m_repeat,
             "ASKF CPU Train Accuracy": "-",
             "ASKF CPU Test Accuracy": "-",
@@ -87,9 +89,18 @@ with open(args[1]) as f:
         for i in range(m_repeat):
             print("Measurement ", current_iteration, " Repetition ", i, " of ", m_repeat)
             # run ASKF CPU
-            # run ASKF GPU            
+            if m_samples <= max_cpu_sample_count:
+                results = run_test_on_ASKF(m_train_X, m_train_c, m_test_X, m_test_c, False)
+                measurement_line["ASKF CPU Train Accuracy"] = results["train_accuracy"]
+                measurement_line["ASKF CPU Test Accuracy"] = results["test_accuracy"]
+                time_sum["ASKF CPU"].append(results["time"])
+            # run ASKF GPU
+            results = run_test_on_ASKF(m_train_X, m_train_c, m_test_X, m_test_c, True)
+            measurement_line["ASKF GPU Train Accuracy"] = results["train_accuracy"]
+            measurement_line["ASKF GPU Test Accuracy"] = results["test_accuracy"]
+            time_sum["ASKF GPU"].append(results["time"])
             # run voASKF GPU
-            results = run_test_on_voASKF(m_train_X, m_train_c, m_test_X, m_test_c, False) # TODO: switch to True for the real thing
+            results = run_test_on_voASKF(m_train_X, m_train_c, m_test_X, m_test_c, True) # TODO: switch to True for the real thing
             measurement_line["voASKF GPU Train Accuracy"] = results["train_accuracy"]
             measurement_line["voASKF GPU Test Accuracy"] = results["test_accuracy"]
             time_sum["voASKF GPU"].append(results["time"])

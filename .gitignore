@@ -7,4 +7,4 @@ lib
 bin/
 share/
 /**/__pycache__
-test_exp.json
+*.csv

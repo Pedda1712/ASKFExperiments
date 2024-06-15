@@ -1,0 +1,17 @@
+{
+    "outfile_prefix": "testExperiment",
+    "measurements": [
+	{
+	    "data": "data/sample_scale/data_10_2_100_0.2.json",
+	    "repeat": 4
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_200_0.2.json",
+	    "repeat": 4
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_400_0.2.json",
+	    "repeat": 4
+	}
+    ]
+}
