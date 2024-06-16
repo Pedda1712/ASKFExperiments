@@ -16,7 +16,7 @@ if len(args) != 2:
     exit(1)
 
 # if a dataset contains more samples than specified here, the CPU run is omitted (would take too long)
-max_cpu_sample_count = 600
+max_cpu_sample_count = 800
 
 with open(args[1]) as f:
     d = json.load(f)

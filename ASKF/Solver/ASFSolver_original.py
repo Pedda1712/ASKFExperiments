@@ -38,18 +38,8 @@ import numpy
 import sys
 # from AuralSonarTests import AuralSonar_Globals
 
-try:
-    from ..genosolver import minimize, check_version
-    USE_GENO_SOLVER = True
-except ImportError:
-    from scipy.optimize import minimize
-    USE_GENO_SOLVER = False
-    WRN = 'WARNING: GENO solver_binary not installed. Using SciPy solver_binary instead.\n' + \
-          'Run:     pip install genosolver'
-    print('*' * 63)
-    print(WRN)
-    print('*' * 63)
-
+from ..genosolver import minimize, check_version
+USE_GENO_SOLVER = True
 
 
 class GenoNLP:

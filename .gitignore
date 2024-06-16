@@ -8,3 +8,4 @@ bin/
 share/
 /**/__pycache__
 *.csv
+*.log

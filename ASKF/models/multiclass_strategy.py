@@ -87,7 +87,7 @@ class OneVsRestClassifier:
     def fit_single(self, K, y):
         for idx, i in enumerate(self.classes):
             y_binary = np.where(y == i, 1, -1)
-            model = ASKFSVMBinary(max_iter=self.max_iter, subsample_size=self.subsample_size)
+            model = ASKFSVMBinary(max_iter=self.max_iter, subsample_size=self.subsample_size, on_gpu=self.kwargs['on_gpu'])
             model.fit(K, y_binary)
             self.models[i] = model
             self.class_map[idx + 1] = i  # 1 maps to first class, -1 maps to rest
