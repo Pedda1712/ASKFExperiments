@@ -15,13 +15,12 @@ if len(args) != 2:
     print("python run_experiment.py <experiment_specification.json>")
     exit(1)
 
-# if a dataset contains more samples than specified here, the CPU run is omitted (would take too long)
-max_cpu_sample_count = 800
-
 with open(args[1]) as f:
     d = json.load(f)
     csv_prefix = d["outfile_prefix"]
     measurements = d["measurements"]
+    # if a dataset contains more samples than specified here, the CPU run is omitted (would take too long)
+    max_cpu_sample_count = d["max_cpu_samples"]
     max_iterations = len(measurements)
     current_iteration = 0
 
