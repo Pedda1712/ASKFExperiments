@@ -3,31 +3,31 @@
     "max_cpu_samples": 0,
     "measurements": [
 	{
-	    "data": "data/class_scale/data_2_2_750_0.2.json",
+	    "data": "data/class_scale/data_2_2_1500_0.2.json",
 	    "repeat": 10
 	},
 	{
-	    "data": "data/class_scale/data_5_2_750_0.2.json",
+	    "data": "data/class_scale/data_5_2_1500_0.2.json",
 	    "repeat": 10
 	},
 	{
-	    "data": "data/class_scale/data_10_2_750_0.2.json",
+	    "data": "data/class_scale/data_10_2_1500_0.2.json",
 	    "repeat": 10
 	},
 	{
-	    "data": "data/class_scale/data_15_2_750_0.2.json",
+	    "data": "data/class_scale/data_15_2_1500_0.2.json",
 	    "repeat": 10
 	},
 	{
-	    "data": "data/class_scale/data_20_2_750_0.2.json",
+	    "data": "data/class_scale/data_20_2_1500_0.2.json",
 	    "repeat": 10
 	},
 	{
-	    "data": "data/class_scale/data_25_2_750_0.2.json",
+	    "data": "data/class_scale/data_25_2_1500_0.2.json",
 	    "repeat": 10
 	},
 	{
-	    "data": "data/class_scale/data_30_2_750_0.2.json",
+	    "data": "data/class_scale/data_30_2_1500_0.2.json",
 	    "repeat": 10
 	}
     ]
