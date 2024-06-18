@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import MinMaxScaler
 from .models.askfsvm import ASKFSVM
+from timeit import default_timer as timer
 
 
 # Define a function to generate a linear kernel
@@ -31,10 +32,11 @@ def run_test_on_ASKF(X_train, y_train, X_test, y_test, use_gpu):
     K_test = [K_test, K0_test, K1_test, K2_test, K3_test]
 
     # Initialize the SVM with maximum iterations and subsample size
-    svm = ASKFSVM(max_iter=200, subsample_size=1.0, mp=(not use_gpu), on_gpu=use_gpu)
-
+    svm = ASKFSVM(max_iter=200, subsample_size=1.0, on_gpu=use_gpu)
     # Train the SVM
+    start = timer()
     svm.fit(K_train, y_train)
+    time = timer() - start
     
     # Use the trained SVM to make predictions on the test set
     y_pred = svm.predict(K_test)
@@ -44,8 +46,9 @@ def run_test_on_ASKF(X_train, y_train, X_test, y_test, use_gpu):
     accuracy_test = accuracy_score(y_test, y_pred)
     accuracy_train = accuracy_score(y_train, y_train_pred)
 
+    print("ASKF run took ", time)
     results = {
-        "time": svm.time,
+        "time": time,
         "test_accuracy": accuracy_test,
         "train_accuracy": accuracy_train
     }
