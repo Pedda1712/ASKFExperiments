@@ -1,0 +1,14 @@
+{
+    "outfile_prefix": "real",
+    "max_cpu_samples": 0,
+    "measurements": [
+	{
+	    "data": "data/real/flowcyto.json",
+	    "repeat": 5
+	},
+	{
+	    "data": "data/real/beacon.json",
+	    "repeat": 5
+	}
+    ]
+}

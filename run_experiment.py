@@ -55,7 +55,7 @@ with open(args[1]) as f:
                       "voASKF GPU Mean Execution Time",
                       "voASKF GPU std-dev Execution Time"
                       ]
-    csv_lines = []    
+    csv_lines = []
     for m in measurements:
         current_iteration += 1
         # load training and test data
@@ -100,9 +100,27 @@ with open(args[1]) as f:
                 m_labels.append(_train_c)
                 m_tlabels.append(_test_c)
         else:
-            print("non vectorial data not supported yet")
-            continue
+            whole_ks = m_json["data"]["ks"]
+            whole_c = m_json["data"]["c"]
+            m_samples = len(whole_ks[0])
+            m_c = np.array(whole_c)
+            m_classes = np.unique(np.array(whole_c)).shape[0]
+            for i in range(m_repeat):
+                train_ind, test_ind, c_train, c_test = train_test_split(np.arange(m_samples), m_c, test_size=0.3, random_state=i)
 
+                _Ks = []
+                _K_test_s = []
+                for k in whole_ks:
+                    nk = np.array(k)
+                    _train = nk[train_ind, train_ind]
+                    _test = nk[test_ind, train_ind]
+                    _Ks.append(_train)
+                    _K_test_s.append(_test)
+                m_Ks.append(_Ks)
+                m_Ktests.append(_K_test_s)
+                m_labels.append(c_train)
+                m_tlabels.append(c_test)
+            
         measurement_line = {
             "# classes": m_classes,
             "# samples": m_samples,
