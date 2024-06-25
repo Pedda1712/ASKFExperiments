@@ -109,6 +109,7 @@ class ASKFvoSVM:
                 if not on_gpu:
                     self.result, self.a , self.new_eigenvalues, self.time = solve(
                         Kold=K_old,
+			beta=self.beta,
                         gamma=self.gamma,
                         delta=self.delta,
                         c=self.C,

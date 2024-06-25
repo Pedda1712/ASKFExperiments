@@ -43,7 +43,7 @@ class ASKFSVMBinary(BaseEstimator, ClassifierMixin):
 
         # Solve the dual problem and compute 'alphas' and 'new_eigenvalues'
         if not self.on_gpu:
-            result, alphas , new_eigenvalues = ASFSolver_original.solve(Kold=K_old, gamma=self.gamma, delta=self.delta, c=self.C, y=self.y,
+            result, alphas , new_eigenvalues = ASFSolver_original.solve(Kold=K_old, beta=self.beta, gamma=self.gamma, delta=self.delta, c=self.C, y=self.y,
                                      eigenvaluesOld=self.old_eigenvalues, eigenvectors=self.eigenvectors, np=np, max_iterations = self.max_iter)
         else:
             import cupy as cp
@@ -51,7 +51,7 @@ class ASKFSVMBinary(BaseEstimator, ClassifierMixin):
             ceigenvaluesOld = cp.asarray(self.old_eigenvalues)
             ceigenvectors = cp.asarray(self.eigenvectors)
             cKold = cp.asarray(K_old)
-            cresult, calphas, cnew_eigenvalues = ASFSolver_original.solve(Kold=cKold, gamma=self.gamma, delta=self.delta, c=self.C, y = cy,
+            cresult, calphas, cnew_eigenvalues = ASFSolver_original.solve(Kold=cKold, beta=self.beta, gamma=self.gamma, delta=self.delta, c=self.C, y = cy,
                                     eigenvaluesOld=ceigenvaluesOld, eigenvectors=ceigenvectors, np=cp, max_iterations = self.max_iter)
             result = cp.asnumpy(cresult)
             alphas = cp.asnumpy(calphas)
