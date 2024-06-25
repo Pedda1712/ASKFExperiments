@@ -18,8 +18,8 @@ class ASKFSVMBinary(BaseEstimator, ClassifierMixin):
         self.eigenvectors = None
         self.new_eigenvalues = None
         self.bias = 0  # Bias term
-        self.beta = 1
-        self.gamma = 1
+        self.beta = -1
+        self.gamma = 10
         self.delta = 1
         self.on_gpu = on_gpu
 

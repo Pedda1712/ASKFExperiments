@@ -34,19 +34,8 @@ from __future__ import division, print_function, absolute_import
 
 from math import inf
 from timeit import default_timer as timer
-try:
-    from ..genosolver import minimize, check_version
-    USE_GENO_SOLVER = True
-except ImportError:
-    from scipy.optimize import minimize
-    USE_GENO_SOLVER = False
-    WRN = 'WARNING: GENO solver not installed. Using SciPy solver instead.\n' + \
-          'Run:     pip install genosolver'
-    print('*' * 63)
-    print(WRN)
-    print('*' * 63)
-
-
+from ..genosolver import minimize, check_version
+USE_GENO_SOLVER = True
 
 class GenoNLP:
     def __init__(self, Kold, beta, gamma, delta, c, y, eigenvaluesOld, eigenvectors, np):

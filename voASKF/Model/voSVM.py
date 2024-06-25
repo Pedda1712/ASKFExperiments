@@ -100,8 +100,8 @@ class ASKFvoSVM:
 		        
                 # solve ASKF problem
                 print("start solving")
-                self.beta = 1
-                self.gamma = 1
+                self.beta = -1
+                self.gamma = 10
                 self.delta = 1
                 self.C = 1
                 self.Ky = self.Y.T @ self.Y
@@ -163,7 +163,7 @@ class ASKFvoSVM:
                 # bias vector
                 self.b = -(self.Y) + (np.multiply(self.a, self.Y) @ self.K_new)
                 # average the biases of all support vectors for robustness
-                self.b = np.mean(self.b, axis=1)*0
+                self.b = np.mean(self.b, axis=1)
         
         # ktest: similarity of test data to training data
         def predict(self, Ks_test):
