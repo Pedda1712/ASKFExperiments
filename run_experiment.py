@@ -15,7 +15,7 @@ def rbf_kernel(X1, X2, gamma=1):
         return np.exp(-gamma * sqdist)
 
 def gamma_estimate (X):
-    n_features = X.shape[0]
+    n_features = X.shape[1]
     return 1 / (n_features * np.var(X))
     
 args = sys.argv
@@ -36,16 +36,22 @@ with open(args[1]) as f:
     csv_fieldnames = ["# classes",
                       "# samples",
                       "# repetitions",
-                      "ASKF CPU Train Accuracy",
-                      "ASKF CPU Test Accuracy",
+                      "ASKF CPU Mean Train Accuracy",
+                      "ASKF CPU std-dev Train Accuracy",
+                      "ASKF CPU Mean Test Accuracy",
+                      "ASKF CPU std-dev Test Accuracy",
                       "ASKF CPU Mean Execution Time",
                       "ASKF CPU std-dev Execution Time",
-                      "ASKF GPU Train Accuracy",
-                      "ASKF GPU Test Accuracy",
+                      "ASKF GPU Mean Train Accuracy",
+                      "ASKF GPU std-dev Train Accuracy",
+                      "ASKF GPU Mean Test Accuracy",
+                      "ASKF GPU std-dev Test Accuracy",
                       "ASKF GPU Mean Execution Time",
                       "ASKF GPU std-dev Execution Time",
-                      "voASKF GPU Train Accuracy",
-                      "voASKF GPU Test Accuracy",
+                      "voASKF GPU Mean Train Accuracy",
+                      "voASKF GPU std-dev Train Accuracy",
+                      "voASKF GPU Mean Test Accuracy",
+                      "voASKF GPU std-dev Test Accuracy",
                       "voASKF GPU Mean Execution Time",
                       "voASKF GPU std-dev Execution Time"
                       ]
@@ -69,10 +75,10 @@ with open(args[1]) as f:
         if m_json["type"] == "vectorial":
             m_X = m_json["data"]["x"]
             m_c = m_json["data"]["c"]
-            m_samples = m_X.shape[0]
-            np.unique(m_c).shape[0]
             m_X = np.array(m_X).astype(float).T
+            m_samples = m_X.shape[0]
             m_c = np.array(m_c).astype(int)
+            m_classes = np.unique(m_c).shape[0]
             for i in range(m_repeat):
                 _train_X, _test_X, _train_c, _test_c = train_test_split(m_X, m_c, test_size=0.3, random_state=i)
                 g_est = gamma_estimate(_train_X)
@@ -127,10 +133,10 @@ with open(args[1]) as f:
             "ASKF CPU Test Accuracy": [],
             "ASKF GPU": [],
             "ASKF GPU Train Accuracy": [],
-            "ASKF GPU Train Accuracy": [],
+            "ASKF GPU Test Accuracy": [],
             "voASKF GPU": [],
             "voASKF GPU Train Accuracy": [],
-            "voASKF GPU Train Accuracy": []
+            "voASKF GPU Test Accuracy": []
         }
 
         for i in range(m_repeat):
