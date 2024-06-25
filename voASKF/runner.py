@@ -12,11 +12,13 @@ def run_test_on_voASKF(Ks, Ktests, labels, testlabels, use_gpu):
         # model test accuracy
         plabels = model.predict(Ktests)
 
+        print(np.vstack((labels,tlabels)))
         print("voASKF run took", time)
         results = {
                 "time": time,
                 "train_accuracy": accuracy_score(labels, tlabels),
                 "test_accuracy": accuracy_score(testlabels, plabels)
         }
+        print(results)
         return results
 

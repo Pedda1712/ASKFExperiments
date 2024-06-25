@@ -4,11 +4,7 @@
     "measurements": [
 	{
 	    "data": "data/real/flowcyto.json",
-	    "repeat": 5
-	},
-	{
-	    "data": "data/real/beacon.json",
-	    "repeat": 5
+	    "repeat": 1
 	}
     ]
 }

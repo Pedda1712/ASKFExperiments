@@ -36,7 +36,7 @@ from __future__ import division, print_function, absolute_import
 from math import inf
 from timeit import default_timer as timer
 try:
-    from genosolver import minimize, check_version
+    from ..genosolver import minimize, check_version
     USE_GENO_SOLVER = True
 except ImportError:
     from scipy.optimize import minimize

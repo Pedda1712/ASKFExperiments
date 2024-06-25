@@ -28,5 +28,6 @@ def run_test_on_ASKF(Ks, Ktests, labels, testlabels, use_gpu):
         "test_accuracy": accuracy_test,
         "train_accuracy": accuracy_train
     }
+    print(results)
     return results
 

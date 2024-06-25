@@ -112,8 +112,8 @@ with open(args[1]) as f:
                 _K_test_s = []
                 for k in whole_ks:
                     nk = np.array(k)
-                    _train = nk[train_ind, train_ind]
-                    _test = nk[:, train_ind][train_ind, :]
+                    _train = nk[train_ind, :][:, train_ind]
+                    _test = nk[test_ind, :][:, train_ind]
                     _Ks.append(_train)
                     _K_test_s.append(_test)
                 m_Ks.append(_Ks)

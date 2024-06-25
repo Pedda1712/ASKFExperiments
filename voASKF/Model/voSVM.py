@@ -107,7 +107,7 @@ class ASKFvoSVM:
                 self.Ky = self.Y.T @ self.Y
 
                 if not on_gpu:
-                    self.result, self.a , self.new_eigenvalues, self.time = solve(
+                    self.result, self.a , self.new_eigenvalues = solve(
                         Kold=K_old,
 			beta=self.beta,
                         gamma=self.gamma,
@@ -127,9 +127,10 @@ class ASKFvoSVM:
                     cKy = cp.asarray(self.Ky)
                     ceigenvaluesOld = cp.asarray(self.old_eigenvalues)
                     ceigenvectors = cp.asarray(self.eigenvectors)
-                    cresult, ca, cnew_eigenvalues, self.time  = solve(
+                    cresult, ca, cnew_eigenvalues  = solve(
                         Kold=cKold,
                         gamma=self.gamma,
+			beta = self.beta,
                         delta=self.delta,
                         c=self.C,
                         Y=cY,
@@ -162,8 +163,7 @@ class ASKFvoSVM:
                 # bias vector
                 self.b = -(self.Y) + (np.multiply(self.a, self.Y) @ self.K_new)
                 # average the biases of all support vectors for robustness
-                self.b = np.mean(self.b, axis=1)
-
+                self.b = np.mean(self.b, axis=1)*0
         
         # ktest: similarity of test data to training data
         def predict(self, Ks_test):
