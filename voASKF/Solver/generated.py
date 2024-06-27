@@ -205,7 +205,7 @@ def solve(Kold, beta, gamma, delta, c, Y, Ky, eigenvaluesOld, eigenvectors, np, 
                'max_iter' : max_iter,
                'm' : 10,
                'ls' : 0,
-               'verbose' : 5  # Set it to 0 to fully mute it.
+               'verbose' : 0  # Set it to 0 to fully mute it.
               }
 
     if USE_GENO_SOLVER:

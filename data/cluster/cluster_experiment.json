@@ -1,0 +1,30 @@
+{
+	"outfile_prefix": "clusterExp",
+	"max_cpu_samples": 0,
+	"measurements": [
+		{
+			"data": "data/cluster/BeaconClassification_SimNormed.json",
+			"measurements": 5
+		},
+		{
+			"data": "data/cluster/BrainMRI_MKL.json",
+			"measurements": 5
+		}, 
+		{
+			"data": "data/cluster/Characters_SimNormed.json",
+			"measurements": 5
+		}, 
+		{
+			"data": "FlowCyto_Sim.json",
+			"measurements": 5
+		},
+		{
+			"data": "Sugar_Sim.json",
+			"measurements": 5
+		}, 
+		{
+			"data": "SwissProt_Sim.json",
+			"measurements": 5
+		}
+	]
+}

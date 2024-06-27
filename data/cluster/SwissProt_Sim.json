@@ -1,0 +1,8 @@
+{
+	"type": "kernels",
+	"data": {
+		"file": "data/cluster/SwissProt_Sim.mat",
+		"kernels": "SwissProt_Sim",
+		"labels": "Labels"
+	}
+}

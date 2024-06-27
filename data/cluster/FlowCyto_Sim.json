@@ -1,0 +1,8 @@
+{
+	"type": "kernels",
+	"data": {
+		"file": "data/cluster/FlowCyto_Sim.mat",
+		"kernels": "FlowCyto_Sim",
+		"labels": "Labels"
+	}
+}

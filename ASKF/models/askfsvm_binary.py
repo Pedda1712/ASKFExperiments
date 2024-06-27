@@ -7,7 +7,7 @@ from ..utils import MatrixDecomposition
 from sklearn.metrics import accuracy_score
 
 class ASKFSVMBinary(BaseEstimator, ClassifierMixin):
-    def __init__(self, C=1.0, max_iter=1000, subsample_size=1.0, beta=1, gamma=1, delta=1, on_gpu=False):
+    def __init__(self, C=1.0, max_iter=1000, subsample_size=1.0, beta=-1, gamma=1, delta=1, on_gpu=False):
         self.C = C  # Regularization parameter
         self.max_iter = max_iter  # Maximum number of iterations
         self.subsample_size = subsample_size  # Size of subsamples to use in training
@@ -18,9 +18,9 @@ class ASKFSVMBinary(BaseEstimator, ClassifierMixin):
         self.eigenvectors = None
         self.new_eigenvalues = None
         self.bias = 0  # Bias term
-        self.beta = -1
-        self.gamma = 10
-        self.delta = 1
+        self.beta = beta
+        self.gamma = gamma
+        self.delta = delta
         self.on_gpu = on_gpu
 
     def _convert_labels(self, y):

@@ -1,0 +1,8 @@
+{
+	"type": "kernels",
+	"data": {
+		"file": "data/cluster/Characters_SimNormed.mat",
+		"kernels": "Characters_SimNormed",
+		"labels": "Labels"
+	}
+}

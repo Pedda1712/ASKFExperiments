@@ -6,9 +6,9 @@ from sklearn.preprocessing import MinMaxScaler
 from .models.askfsvm import ASKFSVM
 from timeit import default_timer as timer
 
-def run_test_on_ASKF(Ks, Ktests, labels, testlabels, use_gpu):
+def run_test_on_ASKF(Ks, Ktests, labels, testlabels, use_gpu, hypers):
 
-    svm = ASKFSVM(max_iter=200, subsample_size=1.0, on_gpu=use_gpu)
+    svm = ASKFSVM(max_iter=200, subsample_size=1.0, on_gpu=use_gpu, beta=hypers["beta"], gamma=hypers["gamma"], delta=hypers["delta"], C=hypers["C"])
     # Train the SVM
     start = timer()
     svm.fit(Ks, labels)

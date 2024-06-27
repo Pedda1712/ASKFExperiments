@@ -1,0 +1,8 @@
+{
+	"type": "kernels",
+	"data": {
+		"file": "data/cluster/Sugar_Sim.mat",
+		"kernels": "Sugar_Sim",
+		"labels": "Labels"
+	}
+}

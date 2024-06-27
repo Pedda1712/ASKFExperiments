@@ -1,0 +1,8 @@
+{
+	"type": "kernels",
+	"data": {
+		"file":	"data/cluster/BrainMRI_MKL.mat",
+		"kernels": "S",
+		"labels": "L"
+	}
+}

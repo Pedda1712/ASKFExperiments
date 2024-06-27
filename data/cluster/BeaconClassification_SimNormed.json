@@ -1,0 +1,8 @@
+{
+	"type": "kernels",
+	"data": {
+		"file": "data/cluster/BeaconClassification_SimNormed.mat",
+		"kernels": "Beacon_SimNormed",
+		"labels": "Labels"
+	}
+}

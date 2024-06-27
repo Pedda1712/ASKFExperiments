@@ -123,7 +123,11 @@ class OneVsRestClassifier:
 
     def predict(self, K):
         predictions = []
-        score_matrix = np.zeros(shape=(len(K[0]),len(self.models)))
+        max_classi = 0
+        for class_i, _ in self.models.items():
+            if class_i > max_classi:
+                max_classi = class_i
+        score_matrix = np.zeros(shape=(len(K[0]),max_classi+1))
         for class_i, model in self.models.items():
             scores = model.decision_function(K)
             score_matrix[:, class_i] = scores
