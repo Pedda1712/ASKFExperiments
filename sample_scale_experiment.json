@@ -3,7 +3,35 @@
     "max_cpu_samples": 800,
     "measurements": [
 	{
+	    "data": "data/sample_scale/data_10_2_100.json",
+	    "repeat": 5
+	},
+	{
 	    "data": "data/sample_scale/data_10_2_200.json",
+	    "repeat": 5
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_400.json",
+	    "repeat": 5
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_600.json",
+	    "repeat": 5
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_800.json",
+	    "repeat": 5
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_1000.json",
+	    "repeat": 5
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_1500.json",
+	    "repeat": 5
+	},
+	{
+	    "data": "data/sample_scale/data_10_2_2000.json",
 	    "repeat": 5
 	}
     ]
