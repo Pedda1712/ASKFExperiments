@@ -71,10 +71,10 @@ class ASKFSVMBinary(BaseEstimator, ClassifierMixin):
         self.projMatrix = np.dot(K_new,np.linalg.pinv(K_sum))
 
         # calculate bias term
-        b_values = self.y - np.sum(self.alphas * self.y * K_new, axis=1)
-        self.bias = np.mean(b_values)  # Average b over all support vectors for robustness
+        b_values = -self.y + np.sum(self.alphas * self.y * K_new, axis=1)
+        self.bias = np.mean(b_values[np.where(self.alphas > 0)])  # Average b over all support vectors for robustness
 
-        y_predict = np.dot(self.alphas * self.y, K_new)# - self.bias
+        y_predict = np.dot(self.alphas * self.y, K_new) - self.bias
         y_pred = np.where(y_predict <= 0, self.classes[0], self.classes[1])
 
         mean_acc = accuracy_score(y_true=y,y_pred=y_pred)
