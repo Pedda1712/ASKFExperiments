@@ -118,7 +118,7 @@ class OneVsRestClassifier:
         self.fit_single(K, y)
         stop = timer()
         self.diff = stop - start
-        print("OneVsRestClassifier fit took " + str(self.diff))
+        #print("OneVsRestClassifier fit took " + str(self.diff))
 
 
     def predict(self, K):

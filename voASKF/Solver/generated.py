@@ -234,7 +234,7 @@ def solve(Kold, beta, gamma, delta, c, Y, Ky, eigenvaluesOld, eigenvectors, np, 
     # assemble solution and map back to original problem
     alphas, eigenvalues = NLP.variables(result.x)
     elapsed = timer() - start
-    print('solving took %.3f sec' % elapsed)
+    #print('solving took %.3f sec' % elapsed)
     return result, alphas, eigenvalues
 
 def generateRandomData(np):

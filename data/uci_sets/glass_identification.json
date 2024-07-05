@@ -1,0 +1,7 @@
+{
+    "type": "uci",
+    "dataset-name": "Glass Identification",
+    "data": {
+        "id": 42
+    }
+}

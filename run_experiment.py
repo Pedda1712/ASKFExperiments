@@ -4,8 +4,13 @@ import json
 import numpy as np
 from voASKF import run_test_on_voASKF, ASKFvoSVM
 from ASKF import run_test_on_ASKF, ASKFSVM
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import f1_score
+from sklearn.neighbors import KNeighborsClassifier
+
+from accumulator import Accumulator
+from ordered_set import OrderedSet
+from ucimlrepo import fetch_ucirepo 
 import itertools
 
 # This file runs ASKF experiments (ASKF-One-V-Rest CPU vs ASKF-One-V-Rest GPU vs voASKF GPU)
@@ -51,6 +56,10 @@ def rbf_kernel(X1, X2, gamma=1):
     )
     return np.exp(-gamma * sqdist)
 
+def tanh_kernel(X1, X2, a, b):
+    t = np.tanh(a * (X1 @ X2.T) + b)
+    #print(np.max(t), np.min(t))
+    return t
 
 def gamma_estimate(X):
     n_features = X.shape[1]
@@ -60,14 +69,14 @@ def gamma_estimate(X):
 def grid_search(
     classifier, Ks, labels, on_gpu, max_iter, crossv
 ):  # exhaustive grid search for ASKF hyperparameters
-    betas = [0, -1, -10, -100]
-    gammas = [0, 0.1, 1, 10, 100]
+    betas = [-1, -10, -100]
+    gammas = [0, 1, 10, 100]
     deltas = [1, 10, 100]
-    cs = [0.01, 0.1, 1, 10, 100]
+    cs = [0.1, 1, 10, 100]
 
-    if Ks[0].shape[0] > 500: # max 500 samples for grid search
+    if Ks[0].shape[0] > 100: # max 100 samples for grid search
         nk = []
-        i =np.arange(500)
+        i =np.arange(100)
         for k in Ks:
             nk.append(k[i, :][:, i])
         labels = labels[i].flatten()
@@ -75,6 +84,8 @@ def grid_search(
 
     best_acc = 0
     best_tuple = ()
+    total = len(list(itertools.product(betas, gammas, deltas, cs)))
+    now = 1
     for e in itertools.product(betas, gammas, deltas, cs):
         A = classifier(
             max_iter=max_iter,
@@ -99,15 +110,32 @@ def grid_search(
                 _kval.append(k[test_ind, :][:, train_ind])
             A.fit(_k, _l)
             y_pred = A.predict(_kval)
-            accuracy_test.append(accuracy_score(_ls, y_pred))
+            accuracy_test.append(f1_score(_ls, y_pred, average="weighted"))
 
         mean_acc = np.mean(np.array(accuracy_test))
-
+        print("grid search " + str(now) + " of " + str(total) + " " + str(mean_acc))
+        now += 1
         if mean_acc > best_acc:
             best_acc = mean_acc
             best_tuple = e
     return {"beta": e[0], "gamma": e[1], "delta": e[2], "C": e[3]}
 
+def get_accumulators(with_cpu_ovr, on_gpu, hypersASKF, hypersVO):
+    accs = []
+    accs.append(Accumulator(ASKFvoSVM(max_iter=200, on_gpu=on_gpu, beta=hypersVO["beta"], gamma=hypersVO["gamma"], delta=hypersVO["delta"], C=hypersVO["C"], subsample_size=1.0),
+                                "vo-askf-gpu"))
+    accs.append(Accumulator(ASKFSVM(max_iter=200, subsample_size=1.0, on_gpu=on_gpu, beta=hypersASKF["beta"], gamma=hypersASKF["gamma"], delta=hypersASKF["delta"], C=hypersASKF["C"]),
+                                "ovr-askf-gpu"))
+    if on_gpu and with_cpu_ovr:
+        accs.append(Accumulator(ASKFSVM(max_iter=200, subsample_size=1.0, on_gpu=False, beta=hypersASKF["beta"], gamma=hypersASKF["gamma"], delta=hypersASKF["delta"], C=hypersASKF["C"]),
+                                "ovr-askf-cpu"))
+    return accs
+
+def get_fieldnames(csv_lines):
+    s = []
+    for l in csv_lines:
+        s = list(OrderedSet(s) | OrderedSet(l.keys()))
+    return s
 
 args = sys.argv
 
@@ -126,38 +154,19 @@ with open(args[1]) as f:
     max_iterations = len(measurements)
     current_iteration = 0
 
-    csv_fieldnames = [
-        "# classes",
-        "# samples",
-        "# repetitions",
-        "ASKF CPU Mean Train Accuracy",
-        "ASKF CPU std-dev Train Accuracy",
-        "ASKF CPU Mean Test Accuracy",
-        "ASKF CPU std-dev Test Accuracy",
-        "ASKF CPU Mean Execution Time",
-        "ASKF CPU std-dev Execution Time",
-        "ASKF GPU Mean Train Accuracy",
-        "ASKF GPU std-dev Train Accuracy",
-        "ASKF GPU Mean Test Accuracy",
-        "ASKF GPU std-dev Test Accuracy",
-        "ASKF GPU Mean Execution Time",
-        "ASKF GPU std-dev Execution Time",
-        "voASKF GPU Mean Train Accuracy",
-        "voASKF GPU std-dev Train Accuracy",
-        "voASKF GPU Mean Test Accuracy",
-        "voASKF GPU std-dev Test Accuracy",
-        "voASKF GPU Mean Execution Time",
-        "voASKF GPU std-dev Execution Time",
-    ]
     csv_lines = []
     for m in measurements:
         current_iteration += 1
         # load training and test data
         m_fname = m["data"]
+        m_dname = m_fname
         m_repeat = int(m["repeat"])
 
         m_f = open(m_fname, "r")
         m_json = json.load(m_f)
+
+        if "dataset-name" in m_json:
+            m_dname = m_json["dataset-name"]
 
         m_Ks = []
         m_Ktests = []
@@ -166,7 +175,62 @@ with open(args[1]) as f:
 
         m_samples = 0
         m_classes = 0
-        if m_json["type"] == "vectorial":
+        m_definiteness = 0
+        m_X_train = []
+        m_y_train = []
+        m_X_test = []
+        m_y_test = []
+        if m_json["type"] == "uci":
+            s = fetch_ucirepo(id=m_json["data"]["id"])
+            m_X = s.data.features
+            m_y = s.data.targets
+            if "target" in m_json["data"]:
+                m_y = m_y[m_json["data"]["target"]]
+            m_X = np.array(m_X)
+            _, m_y = np.unique(np.array(m_y), return_inverse=True)
+            m_y = np.ndarray.flatten(m_y)
+            
+            m_samples = m_X.shape[0]
+            m_classes = np.unique(m_y).shape[0]
+            outer_psd = 0
+            for i in range(m_repeat):
+                _train_X, _test_X, _train_c, _test_c = train_test_split(
+                    m_X, m_y, test_size=0.3, random_state=i
+                )
+                m_X_train.append(_train_X)
+                m_X_test.append(_test_X)
+                m_y_train.append(_train_c)
+                m_y_test.append(_test_c)
+                g_est = gamma_estimate(_train_X)
+                _Ks = []
+                _K_test_s = []
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.1))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 10))
+                _Ks.append(tanh_kernel(_train_X, _train_X, 0.01, -1))
+                _Ks.append(tanh_kernel(_train_X, _train_X, 0.05, -7))
+                _Ks.append(tanh_kernel(_train_X, _train_X, 0.01, -10))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.1))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 10))
+                _K_test_s.append(tanh_kernel(_test_X, _train_X, 0.01, -1))
+                _K_test_s.append(tanh_kernel(_test_X, _train_X, 0.05, -7))
+                _K_test_s.append(tanh_kernel(_test_X, _train_X, 0.01, -10))
+
+                psd_score = 0
+                for _k in _Ks:
+                    eigv, _ = np.linalg.eig(_k)
+                    score = np.sum(np.abs(eigv[np.where(eigv < 0)])) / np.sum(np.abs(eigv))
+                    psd_score += score
+                psd_score /= 6
+                outer_psd += psd_score
+                
+                m_Ks.append(_Ks)
+                m_Ktests.append(_K_test_s)
+                m_labels.append(_train_c)
+                m_tlabels.append(_test_c)
+            m_definiteness = outer_psd / m_repeat
+        elif m_json["type"] == "vectorial":
             m_X = m_json["data"]["x"]
             m_c = m_json["data"]["c"]
             m_X = np.array(m_X).astype(float).T
@@ -195,7 +259,7 @@ with open(args[1]) as f:
                 m_Ktests.append(_K_test_s)
                 m_labels.append(_train_c)
                 m_tlabels.append(_test_c)
-        else:
+        elif m_json["type"] == "kernels":
             whole_ks = []
             whole_c = []
             try:
@@ -223,47 +287,13 @@ with open(args[1]) as f:
                 m_Ktests.append(_K_test_s)
                 m_labels.append(c_train)
                 m_tlabels.append(c_test)
-
-        measurement_line = {
-            "# classes": m_classes,
-            "# samples": m_samples,
-            "# repetitions": m_repeat,
-            "ASKF CPU Mean Train Accuracy": "-",
-            "ASKF CPU std-dev Train Accuracy": "-",
-            "ASKF CPU Mean Test Accuracy": "-",
-            "ASKF CPU std-dev Test Accuracy": "-",
-            "ASKF CPU Mean Execution Time": "-",
-            "ASKF CPU std-dev Execution Time": "-",
-            "ASKF GPU Mean Train Accuracy": "-",
-            "ASKF GPU std-dev Train Accuracy": "-",
-            "ASKF GPU Mean Test Accuracy": "-",
-            "ASKF GPU std-dev Test Accuracy": "-",
-            "ASKF GPU Mean Execution Time": "-",
-            "ASKF GPU std-dev Execution Time": "-",
-            "voASKF GPU Mean Train Accuracy": "-",
-            "voASKF GPU std-dev Train Accuracy": "-",
-            "voASKF GPU Mean Test Accuracy": "-",
-            "voASKF GPU std-dev Test Accuracy": "-",
-            "voASKF GPU Mean Execution Time": "-",
-            "voASKF GPU std-dev Execution Time": "-",
-        }
-
-        sums = {
-            "ASKF CPU": [],
-            "ASKF CPU Train Accuracy": [],
-            "ASKF CPU Test Accuracy": [],
-            "ASKF GPU": [],
-            "ASKF GPU Train Accuracy": [],
-            "ASKF GPU Test Accuracy": [],
-            "voASKF GPU": [],
-            "voASKF GPU Train Accuracy": [],
-            "voASKF GPU Test Accuracy": [],
-        }
-
-        print("------------START PARAMETER SEARCH--------------------")
+        print("grid search OVR")
+        #hypersASKF = {"beta": -10, "gamma": 50, "delta": 10, "C": 10}
+        #hypersVO = {"beta": -10, "gamma": 50, "delta": 10, "C": 10}
         hypersASKF = grid_search(
             ASKFSVM, m_Ks[0], m_labels[0], on_gpu=gpu_supported, max_iter=200, crossv=5
         )
+        print("grid search VO")
         hypersVO = grid_search(
             ASKFvoSVM,
             m_Ks[0],
@@ -274,95 +304,43 @@ with open(args[1]) as f:
         )
         print("hyperparameters OVR ", hypersASKF)
         print("hyperparameters VO", hypersVO)
-        print("------------END   PARAMETER SEARCH--------------------")
 
 
+        cpu = m_samples <= max_cpu_sample_count
+        accs = get_accumulators(cpu, gpu_supported, hypersASKF, hypersVO)
+        
+        estimator_KNN = KNeighborsClassifier(algorithm='auto')
+        parameters_KNN = {
+            'n_neighbors': (1,5, 10),
+            'weights': ['distance']
+            }           
+        grid_search_KNN = GridSearchCV(
+            estimator=estimator_KNN,
+            param_grid=parameters_KNN,
+            scoring = 'accuracy',
+            n_jobs = -1,
+            cv = 5
+        )
+        knn = Accumulator(grid_search_KNN, "kNN")
         for i in range(m_repeat):
-            print(
-                "Measurement ", current_iteration, " Repetition ", i, " of ", m_repeat
-            )
-            # run ASKF CPU
-            # if m_samples <= max_cpu_sample_count:
-            results = run_test_on_ASKF(
-                m_Ks[i], m_Ktests[i], m_labels[i], m_tlabels[i], False, hypersASKF
-            )
-            sums["ASKF CPU Train Accuracy"].append(results["train_accuracy"])
-            sums["ASKF CPU Test Accuracy"].append(results["test_accuracy"])
-            sums["ASKF CPU"].append(results["time"])
-            # run ASKF GPU
-            if gpu_supported:
-                results = run_test_on_ASKF(
-                    m_Ks[i], m_Ktests[i], m_labels[i], m_tlabels[i], True, hypersASKF
-                )
-                sums["ASKF GPU Train Accuracy"].append(results["train_accuracy"])
-                sums["ASKF GPU Test Accuracy"].append(results["test_accuracy"])
-                sums["ASKF GPU"].append(results["time"])
-            # run voASKF GPU
-            results = run_test_on_voASKF(
-                m_Ks[i], m_Ktests[i], m_labels[i], m_tlabels[i], gpu_supported, hypersVO
-            )  # TODO: switch to True for the real thing
-            sums["voASKF GPU Train Accuracy"].append(results["train_accuracy"])
-            sums["voASKF GPU Test Accuracy"].append(results["test_accuracy"])
-            sums["voASKF GPU"].append(results["time"])
+            print("measurement " + str(i+1) + "/" + str(m_repeat) + " of experiment " + str(current_iteration))
+            for a in accs:
+                a.run(m_Ks[i], m_Ktests[i], m_labels[i], m_tlabels[i])
+            if len(m_X_train) > 0: # vectorial uci data -> do kNN as comparision
+                knn.run(m_X_train[i], m_X_test[i], m_labels[i], m_tlabels[i])
 
+        measurement_line = {
+            "dataset-name": m_dname,
+            "n-samples": m_samples,
+            "n-classes": m_classes,
+            "n-cv": m_repeat,
+            "psd-score": m_definiteness
+        }
+        for a in accs:
+            measurement_line = measurement_line | a.result()
+        if len(m_X_train) > 0:
+            measurement_line = measurement_line | knn.result()
         # average
-        measurement_line["ASKF CPU Mean Execution Time"] = np.mean(
-            np.array(sums["ASKF CPU"])
-        )
-        measurement_line["ASKF CPU std-dev Execution Time"] = np.std(
-            np.array(sums["ASKF CPU"])
-        )
-        measurement_line["ASKF CPU Mean Train Accuracy"] = np.mean(
-            np.array(sums["ASKF CPU Train Accuracy"])
-        )
-        measurement_line["ASKF CPU std-dev Train Accuracy"] = np.std(
-            np.array(sums["ASKF CPU Train Accuracy"])
-        )
-        measurement_line["ASKF CPU Mean Test Accuracy"] = np.mean(
-            np.array(sums["ASKF CPU Test Accuracy"])
-        )
-        measurement_line["ASKF CPU std-dev Test Accuracy"] = np.std(
-            np.array(sums["ASKF CPU Test Accuracy"])
-        )
-
-        measurement_line["ASKF GPU Mean Execution Time"] = np.mean(
-            np.array(sums["ASKF GPU"])
-        )
-        measurement_line["ASKF GPU std-dev Execution Time"] = np.std(
-            np.array(sums["ASKF GPU"])
-        )
-        measurement_line["ASKF GPU Mean Train Accuracy"] = np.mean(
-            np.array(sums["ASKF GPU Train Accuracy"])
-        )
-        measurement_line["ASKF GPU std-dev Train Accuracy"] = np.std(
-            np.array(sums["ASKF GPU Train Accuracy"])
-        )
-        measurement_line["ASKF GPU Mean Test Accuracy"] = np.mean(
-            np.array(sums["ASKF GPU Test Accuracy"])
-        )
-        measurement_line["ASKF GPU std-dev Test Accuracy"] = np.std(
-            np.array(sums["ASKF GPU Test Accuracy"])
-        )
-
-        measurement_line["voASKF GPU Mean Execution Time"] = np.mean(
-            np.array(sums["voASKF GPU"])
-        )
-        measurement_line["voASKF GPU std-dev Execution Time"] = np.std(
-            np.array(sums["voASKF GPU"])
-        )
-        measurement_line["voASKF GPU Mean Train Accuracy"] = np.mean(
-            np.array(sums["voASKF GPU Train Accuracy"])
-        )
-        measurement_line["voASKF GPU std-dev Train Accuracy"] = np.std(
-            np.array(sums["voASKF GPU Train Accuracy"])
-        )
-        measurement_line["voASKF GPU Mean Test Accuracy"] = np.mean(
-            np.array(sums["voASKF GPU Test Accuracy"])
-        )
-        measurement_line["voASKF GPU std-dev Test Accuracy"] = np.std(
-            np.array(sums["voASKF GPU Test Accuracy"])
-        )
-
         csv_lines.append(measurement_line)
         intermediate_csv = (
             csv_prefix + str(current_iteration) + "of" + str(max_iterations)
@@ -370,13 +348,13 @@ with open(args[1]) as f:
 
         print("outputting intermediate csv: ", intermediate_csv)
         c = open(intermediate_csv + ".csv", "w", newline="")
-        writer = csv.DictWriter(c, fieldnames=csv_fieldnames)
+        writer = csv.DictWriter(c, fieldnames=get_fieldnames(csv_lines))
         writer.writeheader()
         writer.writerows(csv_lines)
         c.close()
 
     c = open(csv_prefix + ".csv", "w", newline="")
-    writer = csv.DictWriter(c, fieldnames=csv_fieldnames)
+    writer = csv.DictWriter(c, fieldnames=get_fieldnames(csv_lines))
     writer.writeheader()
     writer.writerows(csv_lines)
     c.close()

@@ -114,7 +114,7 @@ class ASKFvoSVM:
         K_old = self.eigenvectors @ np.diag(self.old_eigenvalues) @ self.eigenvectors.T
 
         # solve ASKF problem
-        print("start solving")
+        #print("start solving")
         self.Ky = self.Y.T @ self.Y
 
         if not self.on_gpu:

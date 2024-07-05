@@ -77,8 +77,8 @@ class ASKFSVMBinary(BaseEstimator, ClassifierMixin):
         y_predict = np.dot(self.alphas * self.y, K_new) - self.bias
         y_pred = np.where(y_predict <= 0, self.classes[0], self.classes[1])
 
-        mean_acc = accuracy_score(y_true=y,y_pred=y_pred)
-        print("Accuracy: {}".format(mean_acc))
+        #mean_acc = accuracy_score(y_true=y,y_pred=y_pred)
+        #print("Accuracy: {}".format(mean_acc))
 
     def decision_function(self, Ks_test):
 

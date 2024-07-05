@@ -270,7 +270,7 @@ class LBFGSB:
         f2, _ = self.fg(x - t * delta)
         _, g = self.fg(x)
         d = (f1 - f2) / (2 * t) - np.dot(g, delta)
-        print(f'gradient test: approximation error {d:.5g}')
+        #print(f'gradient test: approximation error {d:.5g}')
         return d
 
     def minimize(self):
@@ -343,7 +343,7 @@ class LBFGSB:
                 f, g, x, step, fun_eval_ls = self.line_search(x, d, step_max, f, g, quadratic=False)
 
             if f > f_old:
-                print('error')
+                #print('error')
                 step = None
 
             if step is None:
