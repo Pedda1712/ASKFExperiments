@@ -207,15 +207,16 @@ with open(args[1]) as f:
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.1))
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est))
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 10))
-                _Ks.append(tanh_kernel(_train_X, _train_X, 0.01, -1))
-                _Ks.append(tanh_kernel(_train_X, _train_X, 0.05, -7))
-                _Ks.append(tanh_kernel(_train_X, _train_X, 0.01, -10))
+                _Ks.append(tanh_kernel(_train_X, _train_X, g_est * 0.5, -g_est * 50))
+                _Ks.append(tanh_kernel(_train_X, _train_X, g_est * 2, -g_est * 350))
+                _Ks.append(tanh_kernel(_train_X, _train_X, g_est * 0.5, -g_est * 500))
+
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.1))
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est))
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 10))
-                _K_test_s.append(tanh_kernel(_test_X, _train_X, 0.01, -1))
-                _K_test_s.append(tanh_kernel(_test_X, _train_X, 0.05, -7))
-                _K_test_s.append(tanh_kernel(_test_X, _train_X, 0.01, -10))
+                _K_test_s.append(tanh_kernel(_test_X, _train_X, g_est * 0.5, -g_est * 50))
+                _K_test_s.append(tanh_kernel(_test_X, _train_X, g_est * 2, -g_est * 350))
+                _K_test_s.append(tanh_kernel(_test_X, _train_X, g_est * 0.05, -g_est * 500))
 
                 psd_score = 0
                 for _k in _Ks:
@@ -230,6 +231,7 @@ with open(args[1]) as f:
                 m_labels.append(_train_c)
                 m_tlabels.append(_test_c)
             m_definiteness = outer_psd / m_repeat
+            #print(m_definiteness)
         elif m_json["type"] == "vectorial":
             m_X = m_json["data"]["x"]
             m_c = m_json["data"]["c"]
