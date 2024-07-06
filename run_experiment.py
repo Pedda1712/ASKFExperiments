@@ -221,7 +221,7 @@ with open(args[1]) as f:
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est))
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 10))
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 100))
-                _Ks.append(tanh_kernel(_train_X, _train_X, a_est, b_est))
+                _Ks.append(tanh_kernel(_train_X, _train_X, a_est*0.1, b_est))
                 _Ks.append(lin_kernel(_train_X, _train_X))
 
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.01))
@@ -229,17 +229,17 @@ with open(args[1]) as f:
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est))
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 10))
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 100))
-                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est, b_est))
+                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*0.1, b_est))
                 _K_test_s.append(lin_kernel(_test_X, _train_X))
 
-                psd_score = 0
+                start = np.array([])
                 for _k in _Ks:
                     eigv, _ = np.linalg.eig(_k)
-                    score = np.sum(np.abs(eigv[np.where(eigv < 0)])) / np.sum(np.abs(eigv))
-                    psd_score += score
-                psd_score /= len(_Ks)
-                outer_psd += psd_score
-                
+                    start = np.append(start, eigv)
+
+                score = np.sum(np.abs(start[np.where(start < 0)])) / np.sum(np.abs(start))
+                outer_psd += score
+
                 m_Ks.append(_Ks)
                 m_Ktests.append(_K_test_s)
                 m_labels.append(_train_c)
