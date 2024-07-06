@@ -1,0 +1,7 @@
+{
+    "type": "uci",
+    "dataset-name": "Image Segmentation",
+    "data": {
+	"id": 50
+    }
+}

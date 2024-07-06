@@ -197,7 +197,10 @@ with open(args[1]) as f:
             m_y = s.data.targets
             if "target" in m_json["data"]:
                 m_y = m_y[m_json["data"]["target"]]
-            m_X = np.array(m_X)
+
+            m_X = np.nan_to_num(np.array(m_X))
+            #m_X = (m_X - m_X.min(axis=0)) / (m_X.max(axis=0) - m_X.min(axis=0))
+            
             _, m_y = np.unique(np.array(m_y), return_inverse=True)
             m_y = np.ndarray.flatten(m_y)
             

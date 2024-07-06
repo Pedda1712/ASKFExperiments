@@ -2,10 +2,10 @@
     "outfile_prefix": "indefiniteness",
     "max_cpu_samples": 0,
     "measurements": [
-        {
-            "data": "data/uci_sets/higher_education.json",
-            "repeat": 5
-        },
+	{
+	    "data": "data/uci_sets/image_segmentation.json",
+	    "repeat": 5
+	},
         {
             "data": "data/uci_sets/wholesale_customers.json",
             "repeat": 5
@@ -17,6 +17,18 @@
         {
             "data": "data/uci_sets/glass_identification.json",
             "repeat": 5
-        }
+        },
+		{
+	    "data": "data/uci_sets/yeast.json",
+	    "repeat": 5
+	},
+	{
+	    "data": "data/uci_sets/user_knowledge.json",
+	    "repeat": 5
+	},
+	{
+	    "data": "data/uci_sets/statlog.json",
+	    "repeat": 5
+	}
     ]
 }
