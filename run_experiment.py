@@ -118,7 +118,7 @@ def grid_search(
         if mean_acc > best_acc:
             best_acc = mean_acc
             best_tuple = e
-    return {"beta": e[0], "gamma": e[1], "delta": e[2], "C": e[3]}
+    return {"beta": best_tuple[0], "gamma": best_tuple[1], "delta": best_tuple[2], "C": best_tuple[3]}
 
 def get_accumulators(with_cpu_ovr, on_gpu, hypersASKF, hypersVO):
     accs = []
