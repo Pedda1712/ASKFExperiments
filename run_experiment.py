@@ -5,7 +5,7 @@ import numpy as np
 from voASKF import run_test_on_voASKF, ASKFvoSVM
 from ASKF import run_test_on_ASKF, ASKFSVM
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 
 from accumulator import Accumulator
@@ -50,6 +50,9 @@ def load_kernels(fname, kernel_table, label_table):
     raise RuntimeError("could not open mat file " + fname)
 
 
+def lin_kernel(X1, X2):
+    return X1 @ X2.T
+
 def rbf_kernel(X1, X2, gamma=1):
     sqdist = (
         np.sum(X1**2, 1).reshape(-1, 1) + np.sum(X2**2, 1) - 2 * np.dot(X1, X2.T)
@@ -65,6 +68,14 @@ def gamma_estimate(X):
     n_features = X.shape[1]
     return 1 / (n_features * np.var(X))
 
+# determine a,b so that tanh(a*min(x) +b) ~= -0.99 and tanh(a*max(x) +b) ~= 0.99
+def tanh_parameters_estimate(X):
+    max = np.max(X @ X.T)
+    min = np.min(X @ X.T)
+    a = (-4)/(min-max)
+    b = 2 - a * max
+    return a,b
+    
 
 def grid_search(
     classifier, Ks, labels, on_gpu, max_iter, crossv
@@ -110,7 +121,7 @@ def grid_search(
                 _kval.append(k[test_ind, :][:, train_ind])
             A.fit(_k, _l)
             y_pred = A.predict(_kval)
-            accuracy_test.append(f1_score(_ls, y_pred, average="weighted"))
+            accuracy_test.append(accuracy_score(_ls, y_pred))
 
         mean_acc = np.mean(np.array(accuracy_test))
         print("grid search " + str(now) + " of " + str(total) + " " + str(mean_acc))
@@ -202,28 +213,31 @@ with open(args[1]) as f:
                 m_y_train.append(_train_c)
                 m_y_test.append(_test_c)
                 g_est = gamma_estimate(_train_X)
+                a_est, b_est = tanh_parameters_estimate(_train_X)
                 _Ks = []
                 _K_test_s = []
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.01))
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.1))
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est))
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 10))
-                _Ks.append(tanh_kernel(_train_X, _train_X, g_est * 0.5, -g_est * 50))
-                _Ks.append(tanh_kernel(_train_X, _train_X, g_est * 2, -g_est * 350))
-                _Ks.append(tanh_kernel(_train_X, _train_X, g_est * 0.5, -g_est * 500))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 100))
+                _Ks.append(tanh_kernel(_train_X, _train_X, a_est, b_est))
+                _Ks.append(lin_kernel(_train_X, _train_X))
 
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.01))
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.1))
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est))
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 10))
-                _K_test_s.append(tanh_kernel(_test_X, _train_X, g_est * 0.5, -g_est * 50))
-                _K_test_s.append(tanh_kernel(_test_X, _train_X, g_est * 2, -g_est * 350))
-                _K_test_s.append(tanh_kernel(_test_X, _train_X, g_est * 0.05, -g_est * 500))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 100))
+                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est, b_est))
+                _K_test_s.append(lin_kernel(_test_X, _train_X))
 
                 psd_score = 0
                 for _k in _Ks:
                     eigv, _ = np.linalg.eig(_k)
                     score = np.sum(np.abs(eigv[np.where(eigv < 0)])) / np.sum(np.abs(eigv))
                     psd_score += score
-                psd_score /= 6
+                psd_score /= len(_Ks)
                 outer_psd += psd_score
                 
                 m_Ks.append(_Ks)
@@ -231,7 +245,7 @@ with open(args[1]) as f:
                 m_labels.append(_train_c)
                 m_tlabels.append(_test_c)
             m_definiteness = outer_psd / m_repeat
-            #print(m_definiteness)
+            print(m_definiteness)
         elif m_json["type"] == "vectorial":
             m_X = m_json["data"]["x"]
             m_c = m_json["data"]["c"]
