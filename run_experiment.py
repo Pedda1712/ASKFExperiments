@@ -220,18 +220,18 @@ with open(args[1]) as f:
                 _Ks = []
                 _K_test_s = []
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.01))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.1))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 10))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 100))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.05))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 1))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 12))
+                #_Ks.append(rbf_kernel(_train_X, _train_X, g_est * 100))
                 _Ks.append(tanh_kernel(_train_X, _train_X, a_est*0.1, b_est))
                 _Ks.append(lin_kernel(_train_X, _train_X))
 
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.01))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.1))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 10))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 100))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.05))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 1))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 12))
+                #_K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 100))
                 _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*0.1, b_est))
                 _K_test_s.append(lin_kernel(_test_X, _train_X))
 
@@ -264,15 +264,15 @@ with open(args[1]) as f:
                 _Ks = []
                 _K_test_s = []
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.01))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.1))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 10))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 100))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.05))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.07))
+                #_Ks.append(rbf_kernel(_train_X, _train_X, g_est * 3))
+                #_Ks.append(rbf_kernel(_train_X, _train_X, g_est * 100))
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.01))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.1))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 10))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 100))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.05))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.07))
+                #_K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 3))
+                #_K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 100))
 
                 m_Ks.append(_Ks)
                 m_Ktests.append(_K_test_s)
@@ -307,8 +307,8 @@ with open(args[1]) as f:
                 m_labels.append(c_train)
                 m_tlabels.append(c_test)
         print("grid search OVR")
-        #hypersASKF = {"beta": -10, "gamma": 50, "delta": 10, "C": 10}
-        #hypersVO = {"beta": -10, "gamma": 50, "delta": 10, "C": 10}
+        hypersASKF = {"beta": -10, "gamma": 50, "delta": 10, "C": 10}
+        hypersVO = {"beta": -10, "gamma": 50, "delta": 10, "C": 10}
         hypersASKF = grid_search(
             ASKFSVM, m_Ks[0], m_labels[0], on_gpu=gpu_supported, max_iter=200, crossv=5
         )
@@ -323,7 +323,6 @@ with open(args[1]) as f:
         )
         print("hyperparameters OVR ", hypersASKF)
         print("hyperparameters VO", hypersVO)
-
 
         cpu = m_samples <= max_cpu_sample_count
         accs = get_accumulators(cpu, gpu_supported, hypersASKF, hypersVO)
