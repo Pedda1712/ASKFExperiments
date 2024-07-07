@@ -39,6 +39,7 @@ class Accumulator():
         plabels = self.model.predict(Ktests)
 
         self.quantities["test-accuracy"].append(accuracy_score(testlabels, plabels))
+        print("acc ", self.model_id, " ", self.quantities["test-accuracy"])
         self.quantities["train-accuracy"].append(accuracy_score(labels, tlabels))
         self.quantities["train-time"].append(time)
         self.quantities["precision"].append(precision_score(testlabels, plabels, average="weighted", zero_division=0.0))

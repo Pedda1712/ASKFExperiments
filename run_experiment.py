@@ -81,9 +81,9 @@ def grid_search(
     classifier, Ks, labels, on_gpu, max_iter, crossv
 ):  # exhaustive grid search for ASKF hyperparameters
     betas = [-1, -10, -100]
-    gammas = [0, 1, 10, 100]
+    gammas = [1, 10, 100]
     deltas = [1, 10, 100]
-    cs = [0.1, 1, 10, 100]
+    cs = [0.01, 0.1, 1, 10, 100, 1000]
 
     if Ks[0].shape[0] > 100: # max 100 samples for grid search
         nk = []
@@ -313,8 +313,8 @@ with open(args[1]) as f:
                 m_labels.append(c_train)
                 m_tlabels.append(c_test)
 
-        hypersASKF = {"beta": -10, "gamma": 50, "delta": 10, "C": 10}
-        hypersVO = {"beta": -10, "gamma": 50, "delta": 10, "C": 10}
+        hypersASKF = {"beta": -1, "gamma": 10, "delta": 1, "C": 100}
+        hypersVO = {"beta": -1, "gamma": 10, "delta": 1, "C": 100}
         print("grid search VO")
         hypersVO = grid_search(
             ASKFvoSVM,
