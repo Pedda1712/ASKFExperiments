@@ -199,7 +199,7 @@ with open(args[1]) as f:
                 m_y = m_y[m_json["data"]["target"]]
 
             m_X = np.nan_to_num(np.array(m_X))
-            #m_X = (m_X - m_X.min(axis=0)) / (m_X.max(axis=0) - m_X.min(axis=0))
+            m_X = (m_X - (m_X.max(axis=0) - m_X.min(axis=0))/2) / (m_X.max(axis=0))
             
             _, m_y = np.unique(np.array(m_y), return_inverse=True)
             m_y = np.ndarray.flatten(m_y)
@@ -220,20 +220,26 @@ with open(args[1]) as f:
                 _Ks = []
                 _K_test_s = []
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.01))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.05))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 1))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 12))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.8))
+                #_Ks.append(rbf_kernel(_train_X, _train_X, g_est * 1))
+                #_Ks.append(rbf_kernel(_train_X, _train_X, g_est * 12))
                 #_Ks.append(rbf_kernel(_train_X, _train_X, g_est * 100))
+                _Ks.append(tanh_kernel(_train_X, _train_X, a_est*100, b_est))
+ #               _Ks.append(tanh_kernel(_train_X, _train_X, a_est*10, b_est))
+ #               _Ks.append(tanh_kernel(_train_X, _train_X, a_est*1, b_est))
                 _Ks.append(tanh_kernel(_train_X, _train_X, a_est*0.1, b_est))
-                _Ks.append(lin_kernel(_train_X, _train_X))
+                #_Ks.append(lin_kernel(_train_X, _train_X))
 
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.01))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.05))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 1))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 12))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.8))
+                #_K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 1))
+                #_K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 12))
                 #_K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 100))
+                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*100, b_est))
+#                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*10, b_est))
+#                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*1, b_est))                                
                 _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*0.1, b_est))
-                _K_test_s.append(lin_kernel(_test_X, _train_X))
+                #_K_test_s.append(lin_kernel(_test_X, _train_X))
 
                 start = np.array([])
                 for _k in _Ks:
@@ -306,12 +312,9 @@ with open(args[1]) as f:
                 m_Ktests.append(_K_test_s)
                 m_labels.append(c_train)
                 m_tlabels.append(c_test)
-        print("grid search OVR")
+
         hypersASKF = {"beta": -10, "gamma": 50, "delta": 10, "C": 10}
         hypersVO = {"beta": -10, "gamma": 50, "delta": 10, "C": 10}
-        hypersASKF = grid_search(
-            ASKFSVM, m_Ks[0], m_labels[0], on_gpu=gpu_supported, max_iter=200, crossv=5
-        )
         print("grid search VO")
         hypersVO = grid_search(
             ASKFvoSVM,
@@ -320,6 +323,10 @@ with open(args[1]) as f:
             on_gpu=gpu_supported,
             max_iter=200,
             crossv=5,
+        )
+        print("grid search OVR")
+        hypersASKF = grid_search(
+            ASKFSVM, m_Ks[0], m_labels[0], on_gpu=gpu_supported, max_iter=200, crossv=5
         )
         print("hyperparameters OVR ", hypersASKF)
         print("hyperparameters VO", hypersVO)
