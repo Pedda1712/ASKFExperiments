@@ -7,8 +7,10 @@ from ASKF import run_test_on_ASKF, ASKFSVM
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import f1_score, accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn import preprocessing
 
 from accumulator import Accumulator
+from kNN import kNN
 from ordered_set import OrderedSet
 from ucimlrepo import fetch_ucirepo 
 import itertools
@@ -83,7 +85,7 @@ def grid_search(
     betas = [-1, -10, -100]
     gammas = [1, 10, 100]
     deltas = [1, 10, 100]
-    cs = [0.01, 0.1, 1, 10, 100, 1000]
+    cs = [0.1, 1, 10, 100]
 
     if Ks[0].shape[0] > 100: # max 100 samples for grid search
         nk = []
@@ -124,7 +126,9 @@ def grid_search(
             accuracy_test.append(accuracy_score(_ls, y_pred))
 
         mean_acc = np.mean(np.array(accuracy_test))
-        print("grid search " + str(now) + " of " + str(total) + " " + str(mean_acc))
+#        print("grid search " + str(now) + " of " + str(total) + " " + str(mean_acc))
+        print("grid search " + str(now) + " of " + str(total) + " " + str(mean_acc) + " min/max " + str(np.min(np.array(accuracy_test))) + "/" + str(np.max(np.array(accuracy_test))))
+
         now += 1
         if mean_acc > best_acc:
             best_acc = mean_acc
@@ -195,51 +199,69 @@ with open(args[1]) as f:
             s = fetch_ucirepo(id=m_json["data"]["id"])
             m_X = s.data.features
             m_y = s.data.targets
+
             if "target" in m_json["data"]:
                 m_y = m_y[m_json["data"]["target"]]
 
             m_X = np.nan_to_num(np.array(m_X))
-            m_X = (m_X - (m_X.max(axis=0) - m_X.min(axis=0))/2) / (m_X.max(axis=0))
-            
+            # scale and stadardize data
+            m = m_X.max(axis=0)
+            m[np.where(m == 0)[0]] = 1
+            m_X = ((m_X - (m_X.max(axis=0) - m_X.min(axis=0))/2) / (m))*2
+            scaler = preprocessing.StandardScaler().fit(m_X)
+            m_X = scaler.transform(m_X)
+
+            m_y = np.array(m_y)
+            if "ignore-labeled" in m_json["data"]:
+                for ig in m_json["data"]["ignore-labeled"]:
+                    inds = np.array(np.where(m_y != ig))[0]
+                    m_X = m_X[inds, :]
+                    m_y = np.ndarray.flatten(m_y[inds])
+            if "summarize-labels" in m_json["data"]:
+                for p in m_json["data"]["summarize-labels"]:
+                    inds1 = np.array(np.where(m_y == p[0]))[0]
+                    inds2 = np.array(np.where(m_y == p[1]))[0]
+                    m_y[inds1] = m_y[inds2][0]
+                    
             _, m_y = np.unique(np.array(m_y), return_inverse=True)
             m_y = np.ndarray.flatten(m_y)
-            
+
             m_samples = m_X.shape[0]
             m_classes = np.unique(m_y).shape[0]
             outer_psd = 0
             for i in range(m_repeat):
                 _train_X, _test_X, _train_c, _test_c = train_test_split(
-                    m_X, m_y, test_size=0.3, random_state=i
+                    m_X, m_y, test_size=0.5, random_state=i
                 )
                 m_X_train.append(_train_X)
                 m_X_test.append(_test_X)
                 m_y_train.append(_train_c)
                 m_y_test.append(_test_c)
+
                 g_est = gamma_estimate(_train_X)
                 a_est, b_est = tanh_parameters_estimate(_train_X)
                 _Ks = []
                 _K_test_s = []
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.01))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.8))
-                #_Ks.append(rbf_kernel(_train_X, _train_X, g_est * 1))
-                #_Ks.append(rbf_kernel(_train_X, _train_X, g_est * 12))
-                #_Ks.append(rbf_kernel(_train_X, _train_X, g_est * 100))
-                _Ks.append(tanh_kernel(_train_X, _train_X, a_est*100, b_est))
- #               _Ks.append(tanh_kernel(_train_X, _train_X, a_est*10, b_est))
- #               _Ks.append(tanh_kernel(_train_X, _train_X, a_est*1, b_est))
-                _Ks.append(tanh_kernel(_train_X, _train_X, a_est*0.1, b_est))
-                #_Ks.append(lin_kernel(_train_X, _train_X))
 
+
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 10))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 1))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.1))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.01))
+ #               _Ks.append(tanh_kernel(_train_X, _train_X, a_est*1, b_est))
+                _Ks.append(tanh_kernel(_train_X, _train_X, a_est*1, b_est))
+ #               _Ks.append(tanh_kernel(_train_X, _train_X, a_est*0.1, b_est))
+ #               _Ks.append(lin_kernel(_train_X, _train_X))
+
+
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 10))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 1))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.1))
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.01))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.8))
-                #_K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 1))
-                #_K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 12))
-                #_K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 100))
-                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*100, b_est))
-#                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*10, b_est))
-#                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*1, b_est))                                
-                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*0.1, b_est))
-                #_K_test_s.append(lin_kernel(_test_X, _train_X))
+#                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*1, b_est))
+                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*1, b_est))
+#                _K_test_s.append(tanh_kernel(_test_X, _train_X, a_est*0.1, b_est))                                
+ #               _K_test_s.append(lin_kernel(_test_X, _train_X))
 
                 start = np.array([])
                 for _k in _Ks:
@@ -262,6 +284,12 @@ with open(args[1]) as f:
             m_samples = m_X.shape[0]
             m_c = np.array(m_c).astype(int)
             m_classes = np.unique(m_c).shape[0]
+            
+            m = m_X.max(axis=0)
+            m_X = ((m_X - (m_X.max(axis=0) - m_X.min(axis=0))/2) / (m))*2
+            scaler = preprocessing.StandardScaler().fit(m_X)
+            m_X = scaler.transform(m_X)
+            
             for i in range(m_repeat):
                 _train_X, _test_X, _train_c, _test_c = train_test_split(
                     m_X, m_c, test_size=0.3, random_state=i
@@ -270,15 +298,15 @@ with open(args[1]) as f:
                 _Ks = []
                 _K_test_s = []
                 _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.01))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.05))
-                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.07))
-                #_Ks.append(rbf_kernel(_train_X, _train_X, g_est * 3))
-                #_Ks.append(rbf_kernel(_train_X, _train_X, g_est * 100))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 0.1))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 1))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 10))
+                _Ks.append(rbf_kernel(_train_X, _train_X, g_est * 100))
                 _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.01))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.05))
-                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.07))
-                #_K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 3))
-                #_K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 100))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 0.1))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 1))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 10))
+                _K_test_s.append(rbf_kernel(_test_X, _train_X, g_est * 100))
 
                 m_Ks.append(_Ks)
                 m_Ktests.append(_K_test_s)
@@ -313,8 +341,8 @@ with open(args[1]) as f:
                 m_labels.append(c_train)
                 m_tlabels.append(c_test)
 
-        hypersASKF = {"beta": -1, "gamma": 10, "delta": 1, "C": 100}
-        hypersVO = {"beta": -1, "gamma": 10, "delta": 1, "C": 100}
+        hypersASKF = {"beta": -100, "gamma": 100, "delta": 1, "C": 1}
+        hypersVO = {"beta": -10, "gamma": 1, "delta": 100, "C": 0.01}
         print("grid search VO")
         hypersVO = grid_search(
             ASKFvoSVM,
@@ -334,25 +362,13 @@ with open(args[1]) as f:
         cpu = m_samples <= max_cpu_sample_count
         accs = get_accumulators(cpu, gpu_supported, hypersASKF, hypersVO)
         
-        estimator_KNN = KNeighborsClassifier(algorithm='auto')
-        parameters_KNN = {
-            'n_neighbors': (1,5, 10),
-            'weights': ['distance']
-            }           
-        grid_search_KNN = GridSearchCV(
-            estimator=estimator_KNN,
-            param_grid=parameters_KNN,
-            scoring = 'accuracy',
-            n_jobs = -1,
-            cv = 5
-        )
-        knn = Accumulator(grid_search_KNN, "kNN")
+        knn = Accumulator(kNN(5), "kNN")
         for i in range(m_repeat):
             print("measurement " + str(i+1) + "/" + str(m_repeat) + " of experiment " + str(current_iteration))
             for a in accs:
                 a.run(m_Ks[i], m_Ktests[i], m_labels[i], m_tlabels[i])
             if len(m_X_train) > 0: # vectorial uci data -> do kNN as comparision
-                knn.run(m_X_train[i], m_X_test[i], m_labels[i], m_tlabels[i])
+                knn.run(m_Ks[i], m_Ktests[i], m_labels[i], m_tlabels[i])
 
         measurement_line = {
             "dataset-name": m_dname,

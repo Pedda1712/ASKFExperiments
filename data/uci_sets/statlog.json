@@ -2,6 +2,7 @@
     "type": "uci",
     "dataset-name": "Vehicle Silhouettes",
     "data": {
-	"id": 149
+	"id": 149,
+	"ignore-labeled": ["204"]
     }
 }

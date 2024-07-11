@@ -2,6 +2,7 @@
     "type": "uci",
     "dataset-name": "User Knowledge Modeling",
     "data": {
-	"id": 257
+	"id": 257,
+	"summarize-labels": [["very_low", "Very Low"]]
     }
 }
