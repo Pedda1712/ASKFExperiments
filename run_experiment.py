@@ -183,6 +183,16 @@ with open(args[1]) as f:
         if "dataset-name" in m_json:
             m_dname = m_json["dataset-name"]
 
+
+        # if experiment specifies hyperparameters, skip search
+        hypersASKF = {"beta": -100, "gamma": 100, "delta": 1, "C": 1}
+        hypersVO = {"beta": -10, "gamma": 1, "delta": 100, "C": 0.01}
+        do_grid_search = True
+        if "hyper" in m:
+            hypersASKF = m["hyper"]["ovr"]
+            hypersVO = m["hyper"]["vo"]
+            do_grid_search = False
+
         m_Ks = []
         m_Ktests = []
         m_labels = []
@@ -340,22 +350,20 @@ with open(args[1]) as f:
                 m_Ktests.append(_K_test_s)
                 m_labels.append(c_train)
                 m_tlabels.append(c_test)
-
-        hypersASKF = {"beta": -100, "gamma": 100, "delta": 1, "C": 1}
-        hypersVO = {"beta": -10, "gamma": 1, "delta": 100, "C": 0.01}
-        print("grid search VO")
-        hypersVO = grid_search(
-            ASKFvoSVM,
-            m_Ks[0],
-            m_labels[0],
-            on_gpu=gpu_supported,
-            max_iter=200,
-            crossv=5,
-        )
-        print("grid search OVR")
-        hypersASKF = grid_search(
-            ASKFSVM, m_Ks[0], m_labels[0], on_gpu=gpu_supported, max_iter=200, crossv=5
-        )
+        if do_grid_search:
+            print("grid search VO")
+            hypersVO = grid_search(
+                ASKFvoSVM,
+                m_Ks[0],
+                m_labels[0],
+                on_gpu=gpu_supported,
+                max_iter=200,
+                crossv=5,
+            )
+            print("grid search OVR")
+            hypersASKF = grid_search(
+                ASKFSVM, m_Ks[0], m_labels[0], on_gpu=gpu_supported, max_iter=200, crossv=5
+            )
         print("hyperparameters OVR ", hypersASKF)
         print("hyperparameters VO", hypersVO)
 

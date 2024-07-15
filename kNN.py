@@ -9,6 +9,9 @@ class kNN:
         self.labels = labels
         return # we get the kernels in the predict method eitherway
 
+    def getSVCount(self):
+        return self.labels.shape[0]
+    
     def predict(self, Ks):
         K = np.zeros(Ks[0].shape)
         for _k in Ks:

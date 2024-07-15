@@ -16,7 +16,8 @@ class Accumulator():
             "train-time": [],
             "precision": [],
             "recall": [],
-            "f1": []
+            "f1": [],
+            "sv-count": []
         }
 
     def clear(self):
@@ -27,7 +28,8 @@ class Accumulator():
             "train-time": [],
             "precision": [],
             "recall": [],
-            "f1": []
+            "f1": [],
+            "sv-count": []
         }
 
     def run(self, Ks, Ktests, labels, testlabels):
@@ -45,7 +47,7 @@ class Accumulator():
         self.quantities["precision"].append(precision_score(testlabels, plabels, average="weighted", zero_division=0.0))
         self.quantities["recall"].append(recall_score(testlabels, plabels, average="weighted"))
         self.quantities["f1"].append(f1_score(testlabels, plabels, average="weighted"))
-
+        self.quantities["sv-count"].append(self.model.getSVCount())
     def result(self):
         out = {}
         for key, value in self.quantities.items():

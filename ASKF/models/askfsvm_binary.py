@@ -61,6 +61,8 @@ class ASKFSVMBinary(BaseEstimator, ClassifierMixin):
         self.alphas = alphas
         self.new_eigenvalues = new_eigenvalues
 
+        self.svinds = np.where(self.alphas > 0)[0]
+        
         K_new = self.eigenvectors @ np.diag(self.new_eigenvalues) @ self.eigenvectors.T
 
         # CREATE FOR SOME TEST REASONS A PROJECTION MATRIX
@@ -80,6 +82,9 @@ class ASKFSVMBinary(BaseEstimator, ClassifierMixin):
         #mean_acc = accuracy_score(y_true=y,y_pred=y_pred)
         #print("Accuracy: {}".format(mean_acc))
 
+    def getSVCount(self):
+        return self.svinds.shape[0]
+    
     def decision_function(self, Ks_test):
 
         #

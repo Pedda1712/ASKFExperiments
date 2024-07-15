@@ -26,6 +26,12 @@ class ASKFSVM:
             self.binary_classifier = ASKFSVMBinary(**self.kwargs)
             self.binary_classifier.fit(K, y_bin)
 
+    def getSVCount(self):
+        if self.classifier is not None:  # multi-class case
+            return self.classifier.getSVCount()
+        else:  # binary classification case
+            return self.binary_classifier.getSVCount()
+            
     def predict(self, K):
         if self.classifier is not None:  # multi-class case
             return self.classifier.predict(K)

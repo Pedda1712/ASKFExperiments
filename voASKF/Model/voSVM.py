@@ -175,6 +175,9 @@ class ASKFvoSVM:
         self.b = np.mean(self.b[:, self.svinds], axis=1)
 
 
+    def getSVCount(self):
+        return self.svinds.shape[0]
+    
     # Ks_test: test data kernels (rows : test data, cols: training data)
     def predict(self, Ks_test):
         # project test similarities into learned space

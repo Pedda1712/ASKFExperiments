@@ -1,0 +1,54 @@
+{
+    "outfile_prefix": "indefiniteness",
+    "max_cpu_samples": 0,
+    "measurements": [
+        {
+            "data": "data/uci_sets/image_segmentation.json",
+            "repeat": 5,
+	    "hyper": {
+		"ovr": {"beta": -10, "gamma": 10, "delta": 1, "C": 10},
+		"vo": {"beta": -100, "gamma": 10, "delta": 100, "C": 1}
+	    }
+        },
+	{
+            "data": "data/uci_sets/wholesale_customers.json",
+            "repeat": 5,
+	    "hyper": {
+		"ovr":  {"beta": -1, "gamma": 1, "delta": 1, "C": 100},
+		"vo": {"beta": -1, "gamma": 10, "delta": 1, "C": 0.1}
+	    }
+        },
+        {
+            "data": "data/uci_sets/vertebral_column.json",
+            "repeat": 5,
+	    "hyper": {
+		"ovr":{"beta": -1, "gamma": 100, "delta": 1, "C": 10},
+		"vo": {"beta": -1, "gamma": 1, "delta": 10, "C": 0.1}
+	    }
+        },
+        {
+            "data": "data/uci_sets/glass_identification.json",
+            "repeat": 5,
+	    "hyper": {
+		"ovr": {"beta": -100, "gamma": 10, "delta": 1, "C": 10},
+		"vo": {"beta": -100, "gamma": 100, "delta": 100, "C": 10}
+	    }
+        },
+        {
+            "data": "data/uci_sets/statlog.json",
+            "repeat": 5,
+	    "hyper": {
+		"ovr": {"beta": -1, "gamma": 1, "delta": 10, "C": 0.1},
+		"vo": {"beta": -100, "gamma": 100, "delta": 10, "C": 1}
+	    }
+        },
+        {
+            "data": "data/uci_sets/user_knowledge.json",
+            "repeat": 5,
+	    "hyper": {
+		"ovr": {"beta": -100, "gamma": 1, "delta": 1, "C": 10},
+		"vo": {"beta": -100, "gamma": 100, "delta": 10, "C": 100}
+	    }
+        }
+    ]
+}
